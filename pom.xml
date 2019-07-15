@@ -6,5 +6,6 @@
   <packaging>pom</packaging>
   <modules>
   	<module>m3core</module>
+  	<module>m3monitor</module>
   </modules>
 </project>
