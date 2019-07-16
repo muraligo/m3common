@@ -11,6 +11,6 @@ import java.util.Map;
  *
  */
 public interface M3Framework {
-    M3Frameworks.Framework kind();
+    String kind();
     void configure(Map<String, Object> props);
 }

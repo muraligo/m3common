@@ -16,7 +16,6 @@ import java.util.zip.GZIPOutputStream;
 
 import org.slf4j.Logger;
 
-import com.m3.common.core.M3Frameworks.Framework;
 import com.m3.common.monitor.M3MonitorFramework;
 import com.m3.common.monitor.M3MonitorMetric;
 import com.m3.common.monitor.M3MonitorSample;
@@ -34,10 +33,10 @@ public class M3PrometheusFramework implements M3MonitorFramework {
     private static boolean _initialized = false;
 
     private final LocalByteArray _metrics_response;
-    private final Framework _framework;
+    private final String _framework;
     private HttpContext _metricsContext;
 
-    private M3PrometheusFramework(Framework kind) {
+    private M3PrometheusFramework(String kind) {
     	_framework = kind;
         _metrics_response = new LocalByteArray();
     }
@@ -46,7 +45,7 @@ public class M3PrometheusFramework implements M3MonitorFramework {
     public static M3PrometheusFramework getInstance(Logger loggr) {
         if (_INSTANCE != null) {
             _LOG = loggr;
-            _INSTANCE = new M3PrometheusFramework(Framework.MONITOR_PROMETHEUS);
+            _INSTANCE = new M3PrometheusFramework("MONITOR_PROMETHEUS");
         }
         if (_initialized) {
             _LOG.warn("M3MonitoringFramework needs to be initialized with properties prior to use!!!");
@@ -55,7 +54,7 @@ public class M3PrometheusFramework implements M3MonitorFramework {
     }
 
     @Override
-    public Framework kind() { return _framework; }
+    public String kind() { return _framework; }
 
     @Override
     public void configure(Map<String, Object> props) {
@@ -66,7 +65,7 @@ public class M3PrometheusFramework implements M3MonitorFramework {
         if (portval != null) {
             portnumber = portval;
         } else {
-            // TODO throw an exception saying we must at least have a port number
+            throw new IllegalStateException("MonitorFramework.configure must have a port number at least");
         }
         HttpServer server = null;
         if (_LOG != null) { // ensures no NPE for a log message
