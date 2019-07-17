@@ -7,5 +7,6 @@
   <modules>
   	<module>m3core</module>
   	<module>m3monitor</module>
+  	<module>oauth2api</module>
   </modules>
 </project>

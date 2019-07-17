@@ -45,7 +45,7 @@ public class M3PrometheusFramework implements M3MonitorFramework {
     public static M3PrometheusFramework getInstance(Logger loggr) {
         if (_INSTANCE != null) {
             _LOG = loggr;
-            _INSTANCE = new M3PrometheusFramework("MONITOR_PROMETHEUS");
+            _INSTANCE = new M3PrometheusFramework("MONITOR.PROMETHEUS");
         }
         if (_initialized) {
             _LOG.warn("M3MonitoringFramework needs to be initialized with properties prior to use!!!");
