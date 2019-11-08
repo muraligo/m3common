@@ -26,26 +26,24 @@ public final class HttpHelper {
         boolean notfirst = false;
         for (Map.Entry<String, String> ent : params.entrySet()) {
             String encodedName;
+            String encodedValue;
             try {
                 encodedName = URLEncoder.encode(ent.getKey(), "UTF-8");
+                String value = ent.getValue();
+                encodedValue = value != null ? URLEncoder.encode(value, "UTF-8") : "";
             } catch (UnsupportedEncodingException uee1) {
                 throw new IllegalArgumentException(uee1);
             }
-            String encodedValue;
-            try {
-                String value = ent.getValue();
-                encodedValue = value != null ? URLEncoder.encode(value, "UTF-8") : "";
-            } catch (UnsupportedEncodingException uee2) {
-                throw new IllegalArgumentException(uee2);
+            if (encodedName != null && encodedValue != null) {
+                if (notfirst) {
+                    sb.append(PARAMETER_SEPARATOR);
+                } else {
+                    notfirst = false;
+                }
+                sb.append(encodedName);
+                sb.append(NAME_VALUE_SEPARATOR);
+                sb.append(encodedValue);
             }
-            if (notfirst) {
-                sb.append(PARAMETER_SEPARATOR);
-            } else {
-                notfirst = false;
-            }
-            sb.append(encodedName);
-            sb.append(NAME_VALUE_SEPARATOR);
-            sb.append(encodedValue);
         }
         return sb.toString();
     }
