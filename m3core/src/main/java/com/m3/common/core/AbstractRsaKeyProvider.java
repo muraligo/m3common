@@ -3,7 +3,11 @@ package com.m3.common.core;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.interfaces.RSAPublicKey;
@@ -16,6 +20,24 @@ import java.util.regex.Pattern;
 public abstract class AbstractRsaKeyProvider {
     private static final Pattern SSH_PUB_KEY = Pattern.compile("ssh-(rsa|dsa) ([A-Za-z0-9/+]+=*) (.*)");
     private static String BEGIN = "-----BEGIN";
+
+    protected final String _sshkey;
+
+    // TODO Ensure we can do the below for BCFips too
+    public AbstractRsaKeyProvider(String sshkeyfile) {
+        try {
+            URL url = getClass().getResource(sshkeyfile);
+            if (url == null)
+                throw new IllegalArgumentException("File not found [" + sshkeyfile + "]");
+            String asread = new String(Files.readAllBytes(Paths.get(url.toURI())));
+//            System.err.println(asread);
+            _sshkey = asread.replaceAll("\\n", "");
+        } catch (URISyntaxException | IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public String sshKey() { return _sshkey; }
 
     public RSAPublicKey parsePublicKey(String key) {
         if (key == null || key.isBlank()) {
@@ -42,7 +64,7 @@ public abstract class AbstractRsaKeyProvider {
         return (RSAPublicKey) kp.getPublic();
     }
 
-    protected abstract KeyPair parseKeyPair(String key);
+    public abstract KeyPair parseKeyPair(String key);
 
     private RSAPublicKey parseSSHPublicKey(String encKey) {
         final byte[] PREFIX = new byte[] {0,0,0,7, 's','s','h','-','r','s','a'};

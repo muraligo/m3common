@@ -1,11 +1,6 @@
 package com.m3.common.core;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -37,8 +32,12 @@ import java.util.regex.Pattern;
 public class SimpleRsaKeyProvider extends AbstractRsaKeyProvider {
     private static Pattern PEM_DATA = Pattern.compile("-----BEGIN (.*)-----(.*)-----END (.*)-----", Pattern.DOTALL);
 
+    public SimpleRsaKeyProvider(String sshkeyfile) {
+        super(sshkeyfile);
+    }
+
     @Override
-    protected KeyPair parseKeyPair(String pemData) {
+    public KeyPair parseKeyPair(String pemData) {
         Matcher m = PEM_DATA.matcher(pemData.strip());
         if (!m.matches()) {
             throw new IllegalArgumentException("String is not PEM encoded data");
@@ -67,20 +66,6 @@ public class SimpleRsaKeyProvider extends AbstractRsaKeyProvider {
             return new KeyPair(publicKey, privateKey);
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
-        }
-    }
-
-    // TODO If we can do the below for BCFips too, we should push this to Abstract method
-    public String readKeyContentFromClassPathFile(String filename) {
-        try {
-            URL url = getClass().getResource(filename);
-            if (url == null)
-                throw new IllegalArgumentException("File not found [" + filename + "]");
-            String asread = new String(Files.readAllBytes(Paths.get(url.toURI())));
-//            System.err.println(asread);
-            return asread.replaceAll("\\n", "");
-        } catch (URISyntaxException | IOException e) {
-            throw new IllegalArgumentException(e);
         }
     }
 
