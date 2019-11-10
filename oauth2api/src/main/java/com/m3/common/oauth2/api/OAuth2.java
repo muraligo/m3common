@@ -1,5 +1,8 @@
 package com.m3.common.oauth2.api;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
 /**
  * This interface holds constants shared by Auth Service (IdP), Client, and Resource
  * 
@@ -26,28 +29,26 @@ public interface OAuth2 {
     String ASSERTION_TYPE = "assertion_type";
     String REDIRECT_URI = "redirect_uri";
     String RESPONSE_TYPE = "response_type";
+    String AUTHORIZATION_HEADER = "Authorization";
+    String WWW_HEADER = "WWW-Authenticate";
+    String ASSERT_TYPE_JWT_CLIENT_CREDENTIALS = "urn:ietf:params:oauth:client-assertion-type:jwt";
 
     enum TokenType {
         BEARER("Bearer"), 
         MAC("MAC");
 
-        private String _tokentype;
-        TokenType(String grantType) {
-            _tokentype = grantType;
+        private final String _tokentype;
+        TokenType(String toktype) {
+            _tokentype = toktype;
         }
 
-        public String toHtml() {
-            return _tokentype;
-        }
+        public String toHtml() { return _tokentype; }
+        public boolean amI(String toktype) { return _tokentype.equalsIgnoreCase(toktype); }
 
-        public boolean amI(String grantType) {
-            return _tokentype.equalsIgnoreCase(grantType);
-        }
-
-        public static TokenType getMe(String grantType) {
-            if (BEARER.amI(grantType)) {
+        public static TokenType getMe(String toktype) {
+            if (BEARER.amI(toktype)) {
                 return BEARER;
-            } else if (MAC.amI(grantType)) {
+            } else if (MAC.amI(toktype)) {
                 return MAC;
             }
             return null;
@@ -76,7 +77,9 @@ public interface OAuth2 {
         }
 
         public static GrantType getMe(String gntype) {
-            if (AUTHORIZATION_CODE.amI(gntype)) {
+            if (gntype == null) {
+                return null;
+            } else if (AUTHORIZATION_CODE.amI(gntype)) {
                 return AUTHORIZATION_CODE;
             } else if (REFRESH_TOKEN.amI(gntype)) {
                 return REFRESH_TOKEN;
@@ -91,6 +94,72 @@ public interface OAuth2 {
             }
             return null;
         }
+    }
+
+    enum AuthorizationType {
+        BASIC("Basic"), 
+        DIGEST("Digest");
+    
+        private final String _text;
+        AuthorizationType(String txtvalue) {
+            _text = txtvalue;
+        }
+
+        public String toHtml() { return _text; }
+        public boolean amI(String txtvalue) { return _text.equalsIgnoreCase(txtvalue); }
+
+        public static AuthorizationType getMe(String txtvalue) {
+            if (BASIC.amI(txtvalue)) {
+                return BASIC;
+            } else if (DIGEST.amI(txtvalue)) {
+                return DIGEST;
+            }
+            return null;
+        }
+    }
+
+    class AuthorizationHeader {
+        private String _realm = null;
+        private String _name = null;
+        private String _credential = null;
+
+        public void decode(String headerValue) {
+            if (headerValue == null || headerValue.isBlank()) return;
+            headerValue = headerValue.strip();
+            if (headerValue.startsWith(AuthorizationType.BASIC.toHtml())) {
+                int valix = AuthorizationType.BASIC.toHtml().length() + 1; // for the space
+                String encodedcredstr = headerValue.substring(valix);
+                byte[] decodedcredb = Base64.getDecoder().decode(encodedcredstr.getBytes(StandardCharsets.UTF_8));
+                String decodedcredstr = new String(decodedcredb);
+                String[] credentials = null;
+                if (decodedcredstr != null) credentials = decodedcredstr.split(":");
+                if (credentials == null || credentials.length < 2) return;
+                int ix = 0;
+                if (credentials.length > 2) {
+                    _realm = credentials[0].strip().substring("realm=".length());
+                    ix++;
+                }
+                _name = credentials[ix].strip();
+                _credential = credentials[ix].strip();
+                if (_name != null && _name.isBlank()) _name = null;
+                if (_credential != null && _credential.isBlank()) _credential = null;
+            }
+            // TODO support Digest
+        }
+
+        public String encode() {
+        	// TODO implement
+            return null;
+        }
+
+        public boolean isEmpty() { return (_name == null || _credential == null); }
+
+        public String principal() { return _name; }
+        public void principal(String value) { _name = value; }
+        public String credential() { return _credential; }
+        public void credential(String value) { _credential = value; }
+        public String realm() { return _realm; }
+        public void realm(String value) { _realm = value; }
     }
 
 }
